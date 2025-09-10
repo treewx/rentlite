@@ -123,6 +123,8 @@ export class AkahuService {
   }
 }
 
+import { prisma } from './prisma'
+
 export async function createAkahuService(userId: string): Promise<AkahuService | null> {
   try {
     const user = await prisma.user.findUnique({
@@ -143,5 +145,3 @@ export async function createAkahuService(userId: string): Promise<AkahuService |
     return null
   }
 }
-
-import { prisma } from './prisma'
