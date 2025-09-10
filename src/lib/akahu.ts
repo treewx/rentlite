@@ -27,14 +27,18 @@ export class AkahuService {
   private baseUrl = 'https://api.akahu.io/v1'
 
   constructor(appToken: string, userToken: string) {
-    this.appToken = appToken
-    this.userToken = userToken
+    this.appToken = appToken.trim().replace(/[\r\n\t]/g, '')
+    this.userToken = userToken.trim().replace(/[\r\n\t]/g, '')
   }
 
   private getHeaders() {
+    // Clean tokens to ensure they're safe for HTTP headers
+    const cleanUserToken = this.userToken.trim().replace(/[\r\n\t]/g, '')
+    const cleanAppToken = this.appToken.trim().replace(/[\r\n\t]/g, '')
+    
     return {
-      'Authorization': `Bearer ${this.userToken}`,
-      'X-Akahu-ID': this.appToken,
+      'Authorization': `Bearer ${cleanUserToken}`,
+      'X-Akahu-ID': cleanAppToken,
       'Content-Type': 'application/json',
     }
   }

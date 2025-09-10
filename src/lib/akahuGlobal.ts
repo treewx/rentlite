@@ -28,8 +28,8 @@ export class AkahuGlobalService {
   private baseUrl = 'https://api.akahu.io/v1'
 
   constructor() {
-    this.appToken = process.env.AKAHU_APP_TOKEN || ''
-    this.userToken = process.env.AKAHU_USER_TOKEN || ''
+    this.appToken = (process.env.AKAHU_APP_TOKEN || '').trim().replace(/[\r\n\t]/g, '')
+    this.userToken = (process.env.AKAHU_USER_TOKEN || '').trim().replace(/[\r\n\t]/g, '')
     
     // Add Railway environment variable for debugging
     console.log('Railway Environment Info:', {
@@ -41,9 +41,13 @@ export class AkahuGlobalService {
   }
 
   private getHeaders() {
+    // Clean tokens to ensure they're safe for HTTP headers
+    const cleanUserToken = this.userToken.trim().replace(/[\r\n\t]/g, '')
+    const cleanAppToken = this.appToken.trim().replace(/[\r\n\t]/g, '')
+    
     return {
-      'Authorization': `Bearer ${this.userToken}`,
-      'X-Akahu-ID': this.appToken,
+      'Authorization': `Bearer ${cleanUserToken}`,
+      'X-Akahu-ID': cleanAppToken,
       'Content-Type': 'application/json',
     }
   }
