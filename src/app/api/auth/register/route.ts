@@ -44,7 +44,12 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    await sendVerificationEmail(email, verificationToken.token)
+    try {
+      await sendVerificationEmail(email, verificationToken.token)
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
+      // Don't fail registration if email fails - user can still verify later
+    }
     
     return NextResponse.json({
       message: 'User created successfully. Please check your email to verify your account.',
