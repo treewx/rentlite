@@ -8,6 +8,7 @@ const createPropertySchema = z.object({
   address: z.string().min(5),
   tenantName: z.string().min(2),
   tenantEmail: z.string().email(),
+  rentAmount: z.number().positive(),
   rentDueDay: z.number().min(1).max(31),
   rentFrequency: z.enum(['WEEKLY', 'FORTNIGHTLY', 'MONTHLY']),
   keywordMatch: z.string().min(2),

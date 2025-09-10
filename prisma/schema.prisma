@@ -75,6 +75,7 @@ model Property {
   tenantEmail String
   
   // Rent details
+  rentAmount     Float @default(0.0)
   rentDueDay     Int // 1-7 for day of week, or 1-31 for day of month
   rentFrequency  RentFrequency
   keywordMatch   String

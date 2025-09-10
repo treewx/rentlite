@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Building2, User, Mail, Calendar, Hash, Bell, Search } from 'lucide-react'
+import { ArrowLeft, Building2, User, Mail, Calendar, Hash, Bell, Search, DollarSign } from 'lucide-react'
 import TransactionBrowser from '@/components/TransactionBrowser'
 
 interface Property {
@@ -11,6 +11,7 @@ interface Property {
   address: string
   tenantName: string
   tenantEmail: string
+  rentAmount: number
   rentDueDay: number
   rentFrequency: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY'
   keywordMatch: string
@@ -28,6 +29,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
     address: '',
     tenantName: '',
     tenantEmail: '',
+    rentAmount: '',
     rentDueDay: 1,
     rentFrequency: 'MONTHLY' as 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY',
     keywordMatch: '',
@@ -47,6 +49,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
           address: property.address,
           tenantName: property.tenantName,
           tenantEmail: property.tenantEmail,
+          rentAmount: property.rentAmount.toString(),
           rentDueDay: property.rentDueDay,
           rentFrequency: property.rentFrequency,
           keywordMatch: property.keywordMatch,
@@ -73,7 +76,10 @@ export default function EditProperty({ params }: { params: { id: string } }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          rentAmount: parseFloat(formData.rentAmount)
+        }),
       })
 
       if (response.ok) {
@@ -95,6 +101,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked 
               : name === 'rentDueDay' ? parseInt(value) 
+              : name === 'rentAmount' ? value // Keep as string for input, will convert on submit
               : type === 'number' ? parseInt(value) 
               : value
     }))
@@ -212,6 +219,29 @@ export default function EditProperty({ params }: { params: { id: string } }) {
                     onChange={handleInputChange}
                     className="input-field pl-10"
                     placeholder="tenant@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="rentAmount" className="block text-sm font-medium text-primary-700 mb-1">
+                  Rent Amount ($)
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <DollarSign className="h-5 w-5 text-primary-400" />
+                  </div>
+                  <input
+                    type="number"
+                    id="rentAmount"
+                    name="rentAmount"
+                    required
+                    min="0"
+                    step="0.01"
+                    value={formData.rentAmount}
+                    onChange={handleInputChange}
+                    className="input-field pl-10"
+                    placeholder="650.00"
                   />
                 </div>
               </div>
@@ -335,7 +365,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
           <TransactionBrowser
             onSelectTransaction={handleTransactionSelected}
             onCancel={() => setShowTransactionBrowser(false)}
-            prefilledAmount={200} // Suggest minimum rent amount
+            prefilledAmount={formData.rentAmount ? parseFloat(formData.rentAmount) : 200}
           />
         )}
       </div>
