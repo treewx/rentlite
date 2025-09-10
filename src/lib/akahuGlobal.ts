@@ -1,4 +1,5 @@
 import axios from 'axios'
+import https from 'https'
 
 interface AkahuTransaction {
   _id: string
@@ -45,9 +46,15 @@ export class AkahuGlobalService {
 
   async getAccounts(): Promise<AkahuAccount[]> {
     try {
+      // Create HTTPS agent for Railway SSL issues
+      const httpsAgent = process.env.NODE_ENV === 'production' && process.env.RAILWAY_ENVIRONMENT 
+        ? new https.Agent({ rejectUnauthorized: false }) 
+        : undefined
+
       const response = await axios.get(`${this.baseUrl}/accounts`, {
         headers: this.getHeaders(),
         timeout: 10000,
+        httpsAgent,
       })
       return response.data.items || []
     } catch (error) {
@@ -78,11 +85,17 @@ export class AkahuGlobalService {
         end: endDate.toISOString(),
       })
 
+      // Create HTTPS agent for Railway SSL issues
+      const httpsAgent = process.env.NODE_ENV === 'production' && process.env.RAILWAY_ENVIRONMENT 
+        ? new https.Agent({ rejectUnauthorized: false }) 
+        : undefined
+
       const response = await axios.get(
         `${this.baseUrl}/accounts/${accountId}/transactions?${params}`,
         {
           headers: this.getHeaders(),
           timeout: 15000,
+          httpsAgent,
         }
       )
       return response.data.items || []
