@@ -43,10 +43,22 @@ export class AkahuService {
     try {
       const response = await axios.get(`${this.baseUrl}/accounts`, {
         headers: this.getHeaders(),
+        timeout: 10000, // 10 second timeout
       })
       return response.data.items || []
     } catch (error) {
       console.error('Error fetching Akahu accounts:', error)
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+          throw new Error('Cannot connect to Akahu API. This may be due to network restrictions on the hosting platform.')
+        }
+        if (error.response?.status === 401) {
+          throw new Error('Invalid Akahu tokens. Please check your App Token and User Token.')
+        }
+        if (error.response?.status === 403) {
+          throw new Error('Access forbidden. Please check your Akahu token permissions.')
+        }
+      }
       throw new Error('Failed to fetch accounts from Akahu')
     }
   }
@@ -66,11 +78,23 @@ export class AkahuService {
         `${this.baseUrl}/accounts/${accountId}/transactions?${params}`,
         {
           headers: this.getHeaders(),
+          timeout: 15000, // 15 second timeout for transactions
         }
       )
       return response.data.items || []
     } catch (error) {
       console.error('Error fetching Akahu transactions:', error)
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+          throw new Error('Cannot connect to Akahu API. This may be due to network restrictions on the hosting platform.')
+        }
+        if (error.response?.status === 401) {
+          throw new Error('Invalid Akahu tokens. Please check your App Token and User Token.')
+        }
+        if (error.response?.status === 403) {
+          throw new Error('Access forbidden. Please check your Akahu token permissions.')
+        }
+      }
       throw new Error('Failed to fetch transactions from Akahu')
     }
   }

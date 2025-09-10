@@ -206,6 +206,17 @@ export default function Settings() {
                 </ol>
               </div>
 
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h3 className="text-sm font-medium text-yellow-900 mb-2">⚠️ Known Issue:</h3>
+                <p className="text-sm text-yellow-800">
+                  Some hosting platforms (including Railway) may have network restrictions that prevent connecting to the Akahu API. 
+                  If you get "Cannot connect to Akahu API" errors, this is likely due to hosting platform limitations, not your tokens.
+                </p>
+                <p className="text-sm text-yellow-800 mt-2">
+                  <strong>Workaround:</strong> You can test the demo mode at <code>/api/test/demo</code> to verify the application logic works.
+                </p>
+              </div>
+
               {/* Test Connection Section */}
               <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
