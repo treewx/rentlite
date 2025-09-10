@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Plus, Building2, Settings, LogOut, Edit, Trash2 } from 'lucide-react'
+import { Plus, Building2, Settings, LogOut, Edit, Trash2, Search } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 
@@ -64,6 +64,23 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error deleting property:', error)
+    }
+  }
+
+  const checkRentManually = async (id: string) => {
+    try {
+      const response = await fetch(`/api/properties/${id}/check-rent`, {
+        method: 'POST',
+      })
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Rent check completed:\n${result.tenantName} - ${result.address}\nRent ${result.rentReceived ? 'RECEIVED' : 'NOT RECEIVED'}${result.amount ? ` ($${result.amount})` : ''}`)
+      } else {
+        const error = await response.json()
+        alert(`Rent check failed: ${error.error}`)
+      }
+    } catch (error) {
+      alert('Error checking rent. Please ensure Akahu is configured.')
     }
   }
 
@@ -152,15 +169,24 @@ export default function Dashboard() {
                       <p className="text-primary-600">Tenant: {property.tenantName}</p>
                     </div>
                     <div className="flex space-x-2">
+                      <button 
+                        onClick={() => checkRentManually(property.id)}
+                        className="p-2 text-blue-400 hover:text-blue-600"
+                        title="Check rent now"
+                      >
+                        <Search className="h-4 w-4" />
+                      </button>
                       <Link 
                         href={`/dashboard/properties/${property.id}/edit`}
                         className="p-2 text-primary-400 hover:text-primary-600"
+                        title="Edit property"
                       >
                         <Edit className="h-4 w-4" />
                       </Link>
                       <button 
                         onClick={() => deleteProperty(property.id)}
                         className="p-2 text-red-400 hover:text-red-600"
+                        title="Delete property"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

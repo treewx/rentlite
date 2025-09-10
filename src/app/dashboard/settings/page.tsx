@@ -11,6 +11,8 @@ export default function Settings() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showTokens, setShowTokens] = useState(false)
+  const [testResult, setTestResult] = useState<any>(null)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
   
   const [formData, setFormData] = useState({
     akahuAppToken: '',
@@ -71,6 +73,26 @@ export default function Settings() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const testAkahuConnection = async () => {
+    setIsTestingConnection(true)
+    setTestResult(null)
+    setError('')
+
+    try {
+      const response = await fetch('/api/test/akahu')
+      const data = await response.json()
+      setTestResult(data)
+    } catch (error) {
+      setTestResult({
+        success: false,
+        error: 'Failed to test connection',
+        message: 'Network error occurred'
+      })
+    } finally {
+      setIsTestingConnection(false)
+    }
   }
 
   return (
@@ -182,6 +204,52 @@ export default function Settings() {
                   <li>Follow the OAuth flow to get your User Token</li>
                   <li>Enter both tokens above to enable bank statement checking</li>
                 </ol>
+              </div>
+
+              {/* Test Connection Section */}
+              <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-gray-900">Test Connection</h3>
+                  <button
+                    type="button"
+                    onClick={testAkahuConnection}
+                    disabled={isTestingConnection || !formData.akahuAppToken || !formData.akahuUserToken}
+                    className="btn-secondary text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isTestingConnection ? 'Testing...' : 'Test Akahu Connection'}
+                  </button>
+                </div>
+                
+                {testResult && (
+                  <div className={`p-3 rounded-lg ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <div className="flex items-center mb-2">
+                      <span className={`text-sm font-medium ${testResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                        {testResult.success ? '✅ Connection Successful!' : '❌ Connection Failed'}
+                      </span>
+                    </div>
+                    <p className={`text-sm ${testResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                      {testResult.message}
+                    </p>
+                    {testResult.success && testResult.accounts && (
+                      <div className="mt-2">
+                        <p className="text-sm text-green-700 font-medium">Connected Accounts:</p>
+                        <ul className="text-sm text-green-600 ml-4 list-disc">
+                          {testResult.accounts.map((account: any, index: number) => (
+                            <li key={index}>
+                              {account.name} ({account.type}) - {account.accountNumber}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {!formData.akahuAppToken || !formData.akahuUserToken ? (
+                  <p className="text-sm text-gray-600">
+                    Enter your Akahu tokens above to test the connection
+                  </p>
+                ) : null}
               </div>
 
               {error && (
