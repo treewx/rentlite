@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { akahuGlobal } from '@/lib/akahuGlobal'
+import { createAkahuService } from '@/lib/akahu'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,11 +11,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!akahuGlobal.isConfigured()) {
+    const akahuService = await createAkahuService(session.user.id)
+    
+    if (!akahuService) {
       return NextResponse.json({
         success: false,
         error: 'Akahu not configured',
-        message: 'Please configure Akahu tokens in environment variables'
+        message: 'Please configure your Akahu tokens in Settings'
       })
     }
 
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get('search') || ''
 
     // Get accounts first
-    const accounts = await akahuGlobal.getAccounts()
+    const accounts = await akahuService.getAccounts()
     
     if (accounts.length === 0) {
       return NextResponse.json({
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
       const startDate = new Date()
       startDate.setDate(endDate.getDate() - days)
 
-      const transactions = await akahuGlobal.getTransactions(accountId, startDate, endDate)
+      const transactions = await akahuService.getTransactions(accountId, startDate, endDate)
       
       // Filter transactions
       const filteredTransactions = transactions
