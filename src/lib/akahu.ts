@@ -24,7 +24,7 @@ interface AkahuAccount {
 export class AkahuService {
   private appToken: string
   private userToken: string
-  private baseUrl = 'https://api.akahu.nz/v1'
+  private baseUrl = 'https://api.akahu.io/v1'
 
   constructor(appToken: string, userToken: string) {
     this.appToken = appToken

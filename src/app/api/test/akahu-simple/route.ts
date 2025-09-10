@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-      const response = await fetch('https://api.akahu.nz/v1/accounts', {
+      const response = await fetch('https://api.akahu.io/v1/accounts', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     // Approach 2: Try direct IP if available (resolve api.akahu.nz first)
     try {
       // Try with a different subdomain or path
-      const response = await fetch('https://api.akahu.nz/ping', {
+      const response = await fetch('https://api.akahu.io/ping', {
         method: 'GET',
         headers: {
           'User-Agent': 'RentLite-Test/1.0',

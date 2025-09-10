@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Test 1: Standard HTTPS request
     try {
-      const response1 = await axios.get('https://api.akahu.nz/v1/accounts', {
+      const response1 = await axios.get('https://api.akahu.io/v1/accounts', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'X-Akahu-ID': appToken,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         rejectUnauthorized: false, // WARNING: Only for testing
       })
 
-      const response2 = await axios.get('https://api.akahu.nz/v1/accounts', {
+      const response2 = await axios.get('https://api.akahu.io/v1/accounts', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'X-Akahu-ID': appToken,
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     // Test 3: Using IP address instead of domain (if we can resolve it)
     try {
       // Try with different user agent
-      const response3 = await axios.get('https://api.akahu.nz/v1/accounts', {
+      const response3 = await axios.get('https://api.akahu.io/v1/accounts', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'X-Akahu-ID': appToken,
