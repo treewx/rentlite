@@ -92,6 +92,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked 
+              : name === 'rentDueDay' ? parseInt(value) 
               : type === 'number' ? parseInt(value) 
               : value
     }))

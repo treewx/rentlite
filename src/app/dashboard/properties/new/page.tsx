@@ -38,7 +38,8 @@ export default function NewProperty() {
         router.push('/dashboard')
       } else {
         const data = await response.json()
-        setError(data.error || 'Failed to create property')
+        setError(data.message || data.error || 'Failed to create property')
+        console.error('Property creation error:', data)
       }
     } catch {
       setError('An error occurred. Please try again.')
@@ -52,6 +53,7 @@ export default function NewProperty() {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked 
+              : name === 'rentDueDay' ? parseInt(value) 
               : type === 'number' ? parseInt(value) 
               : value
     }))
