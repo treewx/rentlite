@@ -30,6 +30,14 @@ export class AkahuGlobalService {
   constructor() {
     this.appToken = process.env.AKAHU_APP_TOKEN || ''
     this.userToken = process.env.AKAHU_USER_TOKEN || ''
+    
+    // Add Railway environment variable for debugging
+    console.log('Railway Environment Info:', {
+      nodeEnv: process.env.NODE_ENV,
+      railwayEnv: process.env.RAILWAY_ENVIRONMENT,
+      railwayRegion: process.env.RAILWAY_REGION,
+      hasTokens: !!(this.appToken && this.userToken)
+    })
   }
 
   private getHeaders() {
