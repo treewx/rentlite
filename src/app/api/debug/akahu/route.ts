@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Approach 1: Basic axios request
     try {
-      const response1 = await axios.get('https://api.akahu.nz/v1/accounts', {
+      const response1 = await axios.get('https://api.akahu.io/v1/accounts', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'X-Akahu-ID': appToken,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Approach 2: Different headers order
     try {
-      const response2 = await axios.get('https://api.akahu.nz/v1/accounts', {
+      const response2 = await axios.get('https://api.akahu.io/v1/accounts', {
         headers: {
           'X-Akahu-ID': appToken,
           'Authorization': `Bearer ${userToken}`,
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     // Approach 3: Using fetch instead of axios
     try {
-      const response3 = await fetch('https://api.akahu.nz/v1/accounts', {
+      const response3 = await fetch('https://api.akahu.io/v1/accounts', {
         headers: {
           'Authorization': `Bearer ${userToken}`,
           'X-Akahu-ID': appToken,

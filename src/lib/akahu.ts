@@ -40,6 +40,8 @@ export class AkahuService {
       'Authorization': `Bearer ${cleanUserToken}`,
       'X-Akahu-ID': cleanAppToken,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'RentLite/1.0'
     }
   }
 

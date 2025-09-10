@@ -36,8 +36,22 @@ export class AkahuGlobalService {
       nodeEnv: process.env.NODE_ENV,
       railwayEnv: process.env.RAILWAY_ENVIRONMENT,
       railwayRegion: process.env.RAILWAY_REGION,
-      hasTokens: !!(this.appToken && this.userToken)
+      hasTokens: !!(this.appToken && this.userToken),
+      appTokenLength: this.appToken.length,
+      userTokenLength: this.userToken.length,
+      appTokenValid: this.appToken.length > 10,
+      userTokenValid: this.userToken.length > 20,
     })
+    
+    // Additional token validation
+    if (this.appToken && this.userToken) {
+      console.log('Token format validation:', {
+        appTokenStartsWithExpected: this.appToken.startsWith('app_'),
+        userTokenStartsWithExpected: this.userToken.startsWith('user_'),
+        appTokenHasValidChars: /^[a-zA-Z0-9_-]+$/.test(this.appToken),
+        userTokenHasValidChars: /^[a-zA-Z0-9_-]+$/.test(this.userToken),
+      })
+    }
   }
 
   private getHeaders() {
@@ -49,6 +63,8 @@ export class AkahuGlobalService {
       'Authorization': `Bearer ${cleanUserToken}`,
       'X-Akahu-ID': cleanAppToken,
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': 'RentLite/1.0'
     }
   }
 
@@ -63,8 +79,19 @@ export class AkahuGlobalService {
         ? new https.Agent({ rejectUnauthorized: false }) 
         : undefined
 
+      const headers = this.getHeaders()
+      console.log('Making Akahu API request with headers:', {
+        url: `${this.baseUrl}/accounts`,
+        hasAuth: !!headers['Authorization'],
+        hasAkahuId: !!headers['X-Akahu-ID'],
+        authLength: headers['Authorization']?.length || 0,
+        akahuIdLength: headers['X-Akahu-ID']?.length || 0,
+        authPrefix: headers['Authorization']?.substring(0, 20) + '...',
+        akahuIdPrefix: headers['X-Akahu-ID']?.substring(0, 10) + '...',
+      })
+
       const response = await axios.get(`${this.baseUrl}/accounts`, {
-        headers: this.getHeaders(),
+        headers,
         timeout: 10000,
         httpsAgent,
       })
@@ -72,6 +99,12 @@ export class AkahuGlobalService {
     } catch (error) {
       console.error('Error fetching Akahu accounts:', error)
       if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          headers: error.response?.headers,
+        })
         if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
           throw new Error('Cannot connect to Akahu API. This may be due to network restrictions on the hosting platform.')
         }
