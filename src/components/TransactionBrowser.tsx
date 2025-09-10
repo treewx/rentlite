@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Calendar, DollarSign, Check, X } from 'lucide-react'
+import { Search, Calendar, DollarSign, X } from 'lucide-react'
 
 interface Transaction {
   id: string
@@ -21,7 +21,7 @@ interface Account {
 }
 
 interface TransactionBrowserProps {
-  onSelectTransaction: (transaction: Transaction, keyword: string) => void
+  onSelectTransaction: (transaction: Transaction, keyword: string, rentAmount: number, rentDueDay: number) => void
   onCancel: () => void
   prefilledAmount?: number
 }
@@ -38,8 +38,6 @@ export default function TransactionBrowser({
   const [minAmount, setMinAmount] = useState(prefilledAmount || 100)
   const [days, setDays] = useState(90)
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const [selectedKeyword, setSelectedKeyword] = useState('')
 
   useEffect(() => {
     loadAccounts()
@@ -95,16 +93,25 @@ export default function TransactionBrowser({
     }
   }
 
-  const handleSelectTransaction = (transaction: Transaction) => {
-    setSelectedTransaction(transaction)
-    setSelectedKeyword(transaction.suggestedKeywords[0] || '')
+  const calculateRentDueDay = (transactionDate: string): number => {
+    const date = new Date(transactionDate)
+    // For monthly: return day of month (1-31)
+    // For weekly/fortnightly: return day of week (1=Sunday, 2=Monday, etc.)
+    // Since we can't know the frequency here, we'll return day of month
+    // The parent component can adjust if needed based on frequency
+    return date.getDate()
   }
 
-  const handleConfirmSelection = () => {
-    if (selectedTransaction && selectedKeyword) {
-      onSelectTransaction(selectedTransaction, selectedKeyword)
-    }
+  const handleSelectTransaction = (transaction: Transaction) => {
+    // Auto-select first 10 characters of description as keyword
+    const autoKeyword = transaction.description.trim().substring(0, 10).toUpperCase()
+    const rentAmount = transaction.amount
+    const rentDueDay = calculateRentDueDay(transaction.date)
+    
+    // Immediately call the callback with all the data
+    onSelectTransaction(transaction, autoKeyword, rentAmount, rentDueDay)
   }
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NZ', {
@@ -135,7 +142,7 @@ export default function TransactionBrowser({
           </div>
           
           <p className="text-sm text-gray-600 mb-4">
-            Browse your recent transactions and select the rent payment to automatically set the keyword
+            Browse your recent transactions and click on a rent payment to automatically fill rent amount, due date, and keyword
           </p>
 
           {/* Filters */}
@@ -213,11 +220,7 @@ export default function TransactionBrowser({
                 <div
                   key={transaction.id}
                   onClick={() => handleSelectTransaction(transaction)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedTransaction?.id === transaction.id
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className="p-4 border border-gray-200 rounded-lg cursor-pointer transition-colors hover:border-primary-500 hover:bg-primary-50"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -239,70 +242,12 @@ export default function TransactionBrowser({
                         ))}
                       </div>
                     </div>
-                    {selectedTransaction?.id === transaction.id && (
-                      <Check className="h-5 w-5 text-primary-600 mt-1" />
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
-        {/* Selection Confirmation */}
-        {selectedTransaction && (
-          <div className="border-t border-gray-200 p-6 bg-gray-50">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Selection</h3>
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Selected transaction:</p>
-              <p className="font-medium">{selectedTransaction.description}</p>
-              <p className="text-sm text-gray-600">
-                {formatDate(selectedTransaction.date)} - {formatCurrency(selectedTransaction.amount)}
-              </p>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Choose keyword for matching future payments:
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {selectedTransaction.suggestedKeywords.map((keyword, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedKeyword(keyword)}
-                    className={`p-2 text-sm border rounded ${
-                      selectedKeyword === keyword
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {keyword}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={selectedKeyword}
-                onChange={(e) => setSelectedKeyword(e.target.value)}
-                className="input-field mt-2"
-                placeholder="Or enter custom keyword..."
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4">
-              <button onClick={onCancel} className="btn-secondary">
-                Cancel
-              </button>
-              <button 
-                onClick={handleConfirmSelection}
-                disabled={!selectedKeyword}
-                className="btn-primary disabled:opacity-50"
-              >
-                Use This Transaction
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

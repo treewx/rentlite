@@ -66,10 +66,23 @@ export default function NewProperty() {
     }))
   }
 
-  const handleTransactionSelected = (transaction: any, keyword: string) => {
+  const handleTransactionSelected = (transaction: any, keyword: string, rentAmount: number, rentDueDay: number) => {
+    // Calculate appropriate due day based on current rent frequency
+    let adjustedRentDueDay = rentDueDay
+    
+    if (formData.rentFrequency === 'WEEKLY' || formData.rentFrequency === 'FORTNIGHTLY') {
+      // For weekly/fortnightly, convert day of month to day of week
+      const transactionDate = new Date(transaction.date)
+      const dayOfWeek = transactionDate.getDay() + 1 // Convert 0-6 to 1-7 (Sunday=1)
+      adjustedRentDueDay = dayOfWeek
+    }
+    // For monthly, rentDueDay is already day of month (1-31) which is correct
+    
     setFormData(prev => ({
       ...prev,
-      keywordMatch: keyword
+      keywordMatch: keyword,
+      rentAmount: rentAmount.toString(),
+      rentDueDay: adjustedRentDueDay
     }))
     setShowTransactionBrowser(false)
   }
@@ -263,7 +276,7 @@ export default function NewProperty() {
                   </button>
                 </div>
                 <p className="text-sm text-primary-600 mt-1">
-                  Enter a keyword manually or click "Browse" to select from actual transactions
+                  Enter details manually or click "Browse" to auto-fill rent amount, due day, and keyword from actual transactions
                 </p>
               </div>
 
