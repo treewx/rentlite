@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "next": "14.0.4",
