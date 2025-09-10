@@ -37,7 +37,15 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    let transactionsData = []
+    let transactionsData: Array<{
+      id: string
+      date: string
+      description: string
+      amount: number
+      accountId: string
+      accountName: string
+      suggestedKeywords: string[]
+    }> = []
 
     // If specific account requested, get transactions for that account
     if (accountId) {
@@ -121,5 +129,5 @@ function extractKeywords(description: string): string[] {
   }
 
   // Remove duplicates and return
-  return [...new Set(keywords)].slice(0, 8)
+  return Array.from(new Set(keywords)).slice(0, 8)
 }
