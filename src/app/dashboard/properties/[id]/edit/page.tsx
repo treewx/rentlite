@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Building2, User, Mail, Calendar, Hash, Bell } from 'lucide-react'
+import { ArrowLeft, Building2, User, Mail, Calendar, Hash, Bell, Search } from 'lucide-react'
+import TransactionBrowser from '@/components/TransactionBrowser'
 
 interface Property {
   id: string
@@ -21,6 +22,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingProperty, setIsLoadingProperty] = useState(true)
   const [error, setError] = useState('')
+  const [showTransactionBrowser, setShowTransactionBrowser] = useState(false)
   
   const [formData, setFormData] = useState({
     address: '',
@@ -96,6 +98,14 @@ export default function EditProperty({ params }: { params: { id: string } }) {
               : type === 'number' ? parseInt(value) 
               : value
     }))
+  }
+
+  const handleTransactionSelected = (transaction: any, keyword: string) => {
+    setFormData(prev => ({
+      ...prev,
+      keywordMatch: keyword
+    }))
+    setShowTransactionBrowser(false)
   }
 
   const getDayOptions = () => {
@@ -262,12 +272,20 @@ export default function EditProperty({ params }: { params: { id: string } }) {
                     required
                     value={formData.keywordMatch}
                     onChange={handleInputChange}
-                    className="input-field pl-10"
+                    className="input-field pl-10 pr-24"
                     placeholder="RENT MAIN ST or SMITH RENT"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowTransactionBrowser(true)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-primary-500 hover:text-primary-700"
+                  >
+                    <Search className="h-5 w-5" />
+                    <span className="ml-1 text-sm">Browse</span>
+                  </button>
                 </div>
                 <p className="text-sm text-primary-600 mt-1">
-                  Enter a keyword that appears in your bank statement when this tenant pays rent
+                  Enter a keyword manually or click "Browse" to select from actual transactions
                 </p>
               </div>
 
@@ -312,6 +330,14 @@ export default function EditProperty({ params }: { params: { id: string } }) {
             </div>
           </form>
         </div>
+
+        {showTransactionBrowser && (
+          <TransactionBrowser
+            onSelectTransaction={handleTransactionSelected}
+            onCancel={() => setShowTransactionBrowser(false)}
+            prefilledAmount={200} // Suggest minimum rent amount
+          />
+        )}
       </div>
     </div>
   )
