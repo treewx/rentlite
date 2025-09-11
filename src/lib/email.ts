@@ -1,66 +1,57 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 15000,
-  socketTimeout: 30000,
-  debug: true,
-  logger: true,
-})
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendVerificationEmail(email: string, token: string) {
   const verificationUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}`
   
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: 'Verify your RentLite account',
-    html: `
-      <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 40px;">
-          <h1 style="color: #1e293b; font-size: 28px; font-weight: 700; margin: 0;">RentLite</h1>
-          <p style="color: #64748b; margin: 8px 0 0 0;">Simplified Rent Management</p>
-        </div>
-        
-        <div style="background: #f8fafc; border-radius: 12px; padding: 32px; margin-bottom: 32px;">
-          <h2 style="color: #1e293b; font-size: 20px; font-weight: 600; margin: 0 0 16px 0;">Verify Your Email Address</h2>
-          <p style="color: #475569; line-height: 1.6; margin: 0 0 24px 0;">
-            Thank you for signing up for RentLite. To complete your registration and start managing your properties, 
-            please verify your email address by clicking the button below:
-          </p>
-          
-          <div style="text-align: center;">
-            <a href="${verificationUrl}" style="background: #475569; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;">
-              Verify Email Address
-            </a>
-          </div>
-          
-          <p style="color: #64748b; font-size: 14px; margin: 24px 0 0 0;">
-            If the button doesn't work, copy and paste this link into your browser:<br>
-            <a href="${verificationUrl}" style="color: #475569; word-break: break-all;">${verificationUrl}</a>
-          </p>
-        </div>
-        
-        <div style="text-align: center; color: #94a3b8; font-size: 14px;">
-          <p>This verification link will expire in 24 hours.</p>
-          <p>If you didn't create an account with RentLite, you can safely ignore this email.</p>
-        </div>
-      </div>
-    `,
-  }
-  
   try {
     console.log('Attempting to send email to:', email)
-    const result = await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully:', result.messageId)
-    return result
+    const { data, error } = await resend.emails.send({
+      from: 'RentLite <noreply@resend.dev>',
+      to: [email],
+      subject: 'Verify your RentLite account',
+      html: `
+        <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="color: #1e293b; font-size: 28px; font-weight: 700; margin: 0;">RentLite</h1>
+            <p style="color: #64748b; margin: 8px 0 0 0;">Simplified Rent Management</p>
+          </div>
+          
+          <div style="background: #f8fafc; border-radius: 12px; padding: 32px; margin-bottom: 32px;">
+            <h2 style="color: #1e293b; font-size: 20px; font-weight: 600; margin: 0 0 16px 0;">Verify Your Email Address</h2>
+            <p style="color: #475569; line-height: 1.6; margin: 0 0 24px 0;">
+              Thank you for signing up for RentLite. To complete your registration and start managing your properties, 
+              please verify your email address by clicking the button below:
+            </p>
+            
+            <div style="text-align: center;">
+              <a href="${verificationUrl}" style="background: #475569; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; display: inline-block;">
+                Verify Email Address
+              </a>
+            </div>
+            
+            <p style="color: #64748b; font-size: 14px; margin: 24px 0 0 0;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${verificationUrl}" style="color: #475569; word-break: break-all;">${verificationUrl}</a>
+            </p>
+          </div>
+          
+          <div style="text-align: center; color: #94a3b8; font-size: 14px;">
+            <p>This verification link will expire in 24 hours.</p>
+            <p>If you didn't create an account with RentLite, you can safely ignore this email.</p>
+          </div>
+        </div>
+      `,
+    })
+
+    if (error) {
+      console.error('Resend API error:', error)
+      throw error
+    }
+
+    console.log('Email sent successfully:', data?.id)
+    return data
   } catch (error) {
     console.error('Email sending failed:', error)
     throw error
@@ -80,9 +71,9 @@ export async function sendRentNotification(
     ? `✅ Rent Received - ${propertyAddress}`
     : `❌ Rent NOT Received - ${propertyAddress}`
   
-  const landlordMailOptions = {
-    from: process.env.GMAIL_USER,
-    to: landlordEmail,
+  await resend.emails.send({
+    from: 'RentLite <noreply@resend.dev>',
+    to: [landlordEmail],
     subject,
     html: `
       <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -109,14 +100,12 @@ export async function sendRentNotification(
         </div>
       </div>
     `,
-  }
-  
-  await transporter.sendMail(landlordMailOptions)
+  })
   
   if (!rentReceived && notifyTenant && tenantEmail) {
-    const tenantMailOptions = {
-      from: process.env.GMAIL_USER,
-      to: tenantEmail,
+    await resend.emails.send({
+      from: 'RentLite <noreply@resend.dev>',
+      to: [tenantEmail],
       subject: `Rent Payment Reminder - ${propertyAddress}`,
       html: `
         <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -143,8 +132,6 @@ export async function sendRentNotification(
           </div>
         </div>
       `,
-    }
-    
-    await transporter.sendMail(tenantMailOptions)
+    })
   }
 }
