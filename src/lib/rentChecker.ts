@@ -14,11 +14,14 @@ export interface RentCheckResult {
 export async function checkRentForProperty(propertyId: string): Promise<RentCheckResult> {
   try {
     console.log(`[DEBUG] Starting rent check for property: ${propertyId}`)
+    console.log(`[DEBUG] About to query property from database...`)
     
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
       include: { user: true }
     })
+
+    console.log(`[DEBUG] Property query completed`)
 
     if (!property) {
       console.log(`[DEBUG] Property not found: ${propertyId}`)
@@ -27,6 +30,7 @@ export async function checkRentForProperty(propertyId: string): Promise<RentChec
 
     console.log(`[DEBUG] Property found: ${property.address} (User: ${property.userId})`)
     console.log(`[DEBUG] Keyword match: ${property.keywordMatch}`)
+    console.log(`[DEBUG] About to create Akahu service...`)
 
     const akahuService = await createAkahuService(property.userId)
     if (!akahuService) {
