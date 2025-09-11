@@ -13,26 +13,39 @@ export interface RentCheckResult {
 
 export async function checkRentForProperty(propertyId: string): Promise<RentCheckResult> {
   try {
+    console.log(`[DEBUG] Starting rent check for property: ${propertyId}`)
+    
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
       include: { user: true }
     })
 
     if (!property) {
+      console.log(`[DEBUG] Property not found: ${propertyId}`)
       throw new Error('Property not found')
     }
 
+    console.log(`[DEBUG] Property found: ${property.address} (User: ${property.userId})`)
+    console.log(`[DEBUG] Keyword match: ${property.keywordMatch}`)
+
     const akahuService = await createAkahuService(property.userId)
     if (!akahuService) {
+      console.log(`[DEBUG] Akahu service creation failed for user: ${property.userId}`)
       throw new Error('Akahu not configured for user')
     }
 
+    console.log(`[DEBUG] Akahu service created successfully`)
+
     const rentDueDate = calculateRentDueDate(property.rentDueDay, property.rentFrequency)
+    console.log(`[DEBUG] Rent due date calculated: ${rentDueDate.toISOString()}`)
+    console.log(`[DEBUG] Starting Akahu API call...`)
     
     const result = await akahuService.checkRentPayment(
       property.keywordMatch,
       rentDueDate
     )
+
+    console.log(`[DEBUG] Akahu API call completed successfully:`, result)
 
     const rentCheck = await prisma.rentCheck.create({
       data: {
@@ -71,7 +84,11 @@ export async function checkRentForProperty(propertyId: string): Promise<RentChec
     }
 
   } catch (error) {
-    console.error(`Error checking rent for property ${propertyId}:`, error)
+    console.error(`[DEBUG] Error checking rent for property ${propertyId}:`, error)
+    console.error(`[DEBUG] Error type:`, error?.constructor?.name)
+    console.error(`[DEBUG] Error message:`, error instanceof Error ? error.message : 'Unknown error')
+    console.error(`[DEBUG] Error stack:`, error instanceof Error ? error.stack : 'No stack trace')
+    
     return {
       propertyId,
       address: 'Unknown',
