@@ -1,18 +1,18 @@
 import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
-  pool: true,
-  maxConnections: 1,
-  rateDelta: 20000,
-  rateLimit: 5,
-  connectionTimeout: 60000,
-  greetingTimeout: 30000,
-  socketTimeout: 60000,
+  connectionTimeout: 30000,
+  greetingTimeout: 15000,
+  socketTimeout: 30000,
+  debug: true,
+  logger: true,
 })
 
 export async function sendVerificationEmail(email: string, token: string) {
@@ -56,7 +56,15 @@ export async function sendVerificationEmail(email: string, token: string) {
     `,
   }
   
-  await transporter.sendMail(mailOptions)
+  try {
+    console.log('Attempting to send email to:', email)
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Email sent successfully:', result.messageId)
+    return result
+  } catch (error) {
+    console.error('Email sending failed:', error)
+    throw error
+  }
 }
 
 export async function sendRentNotification(
