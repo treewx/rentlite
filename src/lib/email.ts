@@ -8,7 +8,7 @@ export async function sendVerificationEmail(email: string, token: string) {
   try {
     console.log('Attempting to send email to:', email)
     const { data, error } = await resend.emails.send({
-      from: 'RentLite <edward.hall@gmail.com>',
+      from: 'RentLite <noreply@honeystoneltd.com>',
       to: [email],
       subject: 'Verify your RentLite account',
       html: `
@@ -104,7 +104,7 @@ export async function sendRentNotification(
   
   if (!rentReceived && notifyTenant && tenantEmail) {
     await resend.emails.send({
-      from: 'RentLite <edward.hall@gmail.com>',
+      from: 'RentLite <noreply@honeystoneltd.com>',
       to: [tenantEmail],
       subject: `Rent Payment Reminder - ${propertyAddress}`,
       html: `
