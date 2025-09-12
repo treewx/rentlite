@@ -16,6 +16,7 @@ export default function SignIn() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const verified = searchParams.get('verified')
+  const reset = searchParams.get('reset')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +59,12 @@ export default function SignIn() {
         {verified && (
           <div className="bg-accent-50 border border-accent-200 rounded-lg p-4 text-center">
             <p className="text-accent-800">✅ Email verified successfully! You can now sign in.</p>
+          </div>
+        )}
+
+        {reset === 'success' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <p className="text-green-800">✅ Password reset successful! You can now sign in with your new password.</p>
           </div>
         )}
 
@@ -129,7 +136,12 @@ export default function SignIn() {
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
 
-          <div className="text-center">
+          <div className="text-center space-y-3">
+            <p className="text-sm text-primary-600">
+              <Link href="/auth/forgot-password" className="font-medium text-primary-700 hover:text-primary-800">
+                Forgot your password?
+              </Link>
+            </p>
             <p className="text-sm text-primary-600">
               Don't have an account?{' '}
               <Link href="/auth/signup" className="font-medium text-primary-700 hover:text-primary-800">

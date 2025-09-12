@@ -1,13 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
+import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
 
-export default function SignUp() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -15,7 +13,15 @@ export default function SignUp() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const token = searchParams.get('token')
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/auth/forgot-password')
+    }
+  }, [token, router])
 
   const validatePassword = (pwd: string): string[] => {
     const errors: string[] = []
@@ -47,7 +53,6 @@ export default function SignUp() {
       return
     }
 
-    // Password strength validation
     const passwordErrors = validatePassword(password)
     if (passwordErrors.length > 0) {
       setError(`Password requirements: ${passwordErrors.join(', ')}`)
@@ -56,20 +61,24 @@ export default function SignUp() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ token, password }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
         setSuccess(true)
+        // Redirect to signin after 3 seconds
+        setTimeout(() => {
+          router.push('/auth/signin?reset=success')
+        }, 3000)
       } else {
-        setError(data.error || 'An error occurred during registration')
+        setError(data.error || 'An error occurred. Please try again.')
       }
     } catch {
       setError('An error occurred. Please try again.')
@@ -78,30 +87,30 @@ export default function SignUp() {
     }
   }
 
-  const passwordErrors = validatePassword(password)
-  const isPasswordValid = password.length > 0 && passwordErrors.length === 0
+  if (!token) {
+    return null // Will redirect
+  }
 
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 text-center">
-          <div>
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
             <h1 className="text-4xl font-bold text-primary-900 mb-2">RentLite</h1>
             <p className="text-primary-600 mb-8">Simplified Rent Management</p>
           </div>
           
           <div className="card">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-accent-100 mb-4">
-                <Mail className="h-6 w-6 text-accent-600" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <h2 className="text-xl font-semibold text-primary-900 mb-2">Check your email</h2>
+              <h2 className="text-xl font-semibold text-primary-900 mb-2">Password Reset Successful</h2>
               <p className="text-primary-600 mb-6">
-                We've sent a verification link to <strong>{email}</strong>. 
-                Please click the link to verify your account and complete your registration.
+                Your password has been reset successfully. You will be redirected to the sign in page in a few seconds.
               </p>
               <Link href="/auth/signin" className="btn-primary">
-                Go to Sign In
+                Sign In Now
               </Link>
             </div>
           </div>
@@ -110,60 +119,26 @@ export default function SignUp() {
     )
   }
 
+  const passwordErrors = validatePassword(password)
+  const isPasswordValid = password.length > 0 && passwordErrors.length === 0
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-primary-900 mb-2">RentLite</h1>
           <p className="text-primary-600 mb-8">Simplified Rent Management</p>
-          <h2 className="text-2xl font-semibold text-primary-800">Create your account</h2>
+          <h2 className="text-2xl font-semibold text-primary-800">Reset your password</h2>
+          <p className="mt-2 text-sm text-primary-600">
+            Enter your new password below.
+          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-primary-700 mb-1">
-                Full name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-primary-400" />
-                </div>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="Enter your full name"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-1">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-primary-400" />
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-10"
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-1">
-                Password
+                New password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -176,7 +151,7 @@ export default function SignUp() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input-field pl-10 pr-10"
-                  placeholder="Create a password"
+                  placeholder="Enter your new password"
                 />
                 <button
                   type="button"
@@ -195,31 +170,29 @@ export default function SignUp() {
               {password.length > 0 && (
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center space-x-2">
-                    <div className={`h-2 w-full rounded ${passwordErrors.length === 0 ? 'bg-green-200' : 'bg-gray-200'}`}>
+                    <div className={`h-2 w-full rounded ${isPasswordValid ? 'bg-green-200' : 'bg-gray-200'}`}>
                       <div className={`h-full rounded transition-all ${
-                        passwordErrors.length === 0 ? 'w-full bg-green-500' : 
+                        isPasswordValid ? 'w-full bg-green-500' : 
                         passwordErrors.length <= 2 ? 'w-2/3 bg-yellow-500' : 
                         'w-1/3 bg-red-500'
                       }`} />
                     </div>
                   </div>
-                  {passwordErrors.length > 0 && (
-                    <ul className="text-xs space-y-1">
-                      {passwordErrors.map((error, index) => (
-                        <li key={index} className="text-red-600 flex items-center">
-                          <span className="w-1 h-1 bg-red-600 rounded-full mr-2" />
-                          {error}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <ul className="text-xs space-y-1">
+                    {passwordErrors.map((error, index) => (
+                      <li key={index} className="text-red-600 flex items-center">
+                        <span className="w-1 h-1 bg-red-600 rounded-full mr-2" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-primary-700 mb-1">
-                Confirm password
+                Confirm new password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -232,14 +205,11 @@ export default function SignUp() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="input-field pl-10"
-                  placeholder="Confirm your password"
+                  placeholder="Confirm your new password"
                 />
               </div>
               {confirmPassword.length > 0 && password !== confirmPassword && (
                 <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
-              )}
-              {confirmPassword.length > 0 && password === confirmPassword && password.length > 0 && (
-                <p className="mt-1 text-xs text-green-600">Passwords match ✓</p>
               )}
             </div>
           </div>
@@ -252,19 +222,19 @@ export default function SignUp() {
 
           <button
             type="submit"
-            disabled={isLoading || !isPasswordValid || password !== confirmPassword || !name.trim() || !email.trim()}
+            disabled={isLoading || !isPasswordValid || password !== confirmPassword}
             className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? 'Resetting password...' : 'Reset password'}
           </button>
 
           <div className="text-center">
-            <p className="text-sm text-primary-600">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="font-medium text-primary-700 hover:text-primary-800">
-                Sign in
-              </Link>
-            </p>
+            <Link 
+              href="/auth/signin" 
+              className="text-sm font-medium text-primary-700 hover:text-primary-800"
+            >
+              Back to sign in
+            </Link>
           </div>
         </form>
       </div>

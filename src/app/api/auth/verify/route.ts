@@ -1,42 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { addSecurityHeaders } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
   
   if (!token) {
-    return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+    return addSecurityHeaders(NextResponse.json(
+      { error: 'Verification token is required' }, 
+      { status: 400 }
+    ))
   }
   
   try {
-    const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token }
+    // Find user with this verification token
+    const user = await prisma.user.findFirst({
+      where: {
+        emailVerificationToken: token,
+        emailVerificationExpires: {
+          gt: new Date() // Token hasn't expired
+        }
+      }
     })
     
-    if (!verificationToken || verificationToken.expires < new Date()) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 400 }
+    if (!user) {
+      // Redirect to an error page or signin with error message
+      return NextResponse.redirect(
+        new URL('/auth/signin?error=verification-failed&message=Invalid or expired verification link', request.url)
       )
     }
     
+    // Check if already verified
+    if (user.emailVerified) {
+      return NextResponse.redirect(
+        new URL('/auth/signin?verified=already&message=Email already verified', request.url)
+      )
+    }
+    
+    // Verify the user
     await prisma.user.update({
-      where: { email: verificationToken.identifier },
-      data: { emailVerified: new Date() }
+      where: { id: user.id },
+      data: { 
+        emailVerified: new Date(),
+        emailVerificationToken: null, // Clear the token
+        emailVerificationExpires: null // Clear the expiration
+      }
     })
     
-    await prisma.verificationToken.delete({
-      where: { token }
-    })
+    console.log(`Email verified successfully for user: ${user.email}`)
     
-    return NextResponse.redirect(new URL('/auth/signin?verified=true', request.url))
+    return NextResponse.redirect(
+      new URL('/auth/signin?verified=true', request.url)
+    )
     
   } catch (error) {
-    console.error('Verification error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    console.error('Email verification error:', error)
+    return NextResponse.redirect(
+      new URL('/auth/signin?error=verification-error&message=An error occurred during verification', request.url)
     )
   }
 }
